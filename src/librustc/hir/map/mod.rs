@@ -1018,7 +1018,7 @@ impl<'hir> Map<'hir> {
     /// corresponding to the Node ID
     pub fn attrs(&self, id: NodeId) -> &'hir [ast::Attribute] {
         self.read(id); // reveals attributes on the node
-        let attrs = match self.find(id) {
+        let attrs = match self.find_entry(id).map(|entry| entry.node) {
             Some(Node::Local(l)) => Some(&l.attrs[..]),
             Some(Node::Item(i)) => Some(&i.attrs[..]),
             Some(Node::ForeignItem(fi)) => Some(&fi.attrs[..]),
@@ -1032,6 +1032,7 @@ impl<'hir> Map<'hir> {
             // unit/tuple structs take the attributes straight from
             // the struct definition.
             Some(Node::StructCtor(_)) => return self.attrs(self.get_parent(id)),
+            Some(Node::Crate) => Some(&self.forest.krate.attrs[..]),
             _ => None
         };
         attrs.unwrap_or(&[])
